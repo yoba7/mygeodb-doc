@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>geodatabase &mdash; mygeodb 23.06 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            mygeodb
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../readme.html">Readme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">mygeodb</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">geodatabase</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for geodatabase</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Wed Dec 23 17:31:33 2020</span>
+
+<span class="sd">@author: Youri.Baeyens</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sqlite3</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">from</span> <span class="nn">mygeodb.graph</span> <span class="kn">import</span> <span class="n">connectedComponentsLabeler</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
+
+<span class="n">geom_types</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">:</span><span class="s1">&#39;POINT&#39;</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">:</span><span class="s1">&#39;LINESTRING&#39;</span><span class="p">,</span>
+            <span class="mi">3</span><span class="p">:</span><span class="s1">&#39;POLYGON&#39;</span><span class="p">,</span>
+            <span class="mi">4</span><span class="p">:</span><span class="s1">&#39;MULTIPOINT&#39;</span><span class="p">,</span>
+            <span class="mi">5</span><span class="p">:</span><span class="s1">&#39;MULTILINESTRING&#39;</span><span class="p">,</span>
+            <span class="mi">6</span><span class="p">:</span><span class="s1">&#39;MULTIPOLYGON&#39;</span><span class="p">,</span>
+            <span class="mi">7</span><span class="p">:</span><span class="s1">&#39;GEOMETRYCOLLECTION&#39;</span><span class="p">,</span>
+            <span class="mi">1001</span><span class="p">:</span><span class="s1">&#39;POINT Z&#39;</span><span class="p">,</span>
+            <span class="mi">1002</span><span class="p">:</span><span class="s1">&#39;LINESTRING Z&#39;</span><span class="p">,</span>
+            <span class="mi">1003</span><span class="p">:</span><span class="s1">&#39;POLYGON Z&#39;</span><span class="p">,</span>
+            <span class="mi">1004</span><span class="p">:</span><span class="s1">&#39;MULTIPOINT Z&#39;</span><span class="p">,</span>
+            <span class="mi">1005</span><span class="p">:</span><span class="s1">&#39;MULTILINESTRING Z&#39;</span><span class="p">,</span>
+            <span class="mi">1006</span><span class="p">:</span><span class="s1">&#39;MULTIPOLYGON Z&#39;</span><span class="p">,</span>
+            <span class="mi">1007</span><span class="p">:</span><span class="s1">&#39;GEOMETRYCOLLECTION Z&#39;</span><span class="p">,</span>
+            <span class="mi">2001</span><span class="p">:</span><span class="s1">&#39;POINT M&#39;</span><span class="p">,</span>
+            <span class="mi">2002</span><span class="p">:</span><span class="s1">&#39;LINESTRING M&#39;</span><span class="p">,</span>
+            <span class="mi">2003</span><span class="p">:</span><span class="s1">&#39;POLYGON M&#39;</span><span class="p">,</span>
+            <span class="mi">2004</span><span class="p">:</span><span class="s1">&#39;MULTIPOINT M&#39;</span><span class="p">,</span>
+            <span class="mi">2005</span><span class="p">:</span><span class="s1">&#39;MULTILINESTRING M&#39;</span><span class="p">,</span>
+            <span class="mi">2006</span><span class="p">:</span><span class="s1">&#39;MULTIPOLYGON M&#39;</span><span class="p">,</span>
+            <span class="mi">2007</span><span class="p">:</span><span class="s1">&#39;GEOMETRYCOLLECTION M&#39;</span><span class="p">,</span>
+            <span class="mi">3001</span><span class="p">:</span><span class="s1">&#39;POINT ZM&#39;</span><span class="p">,</span>
+            <span class="mi">3002</span><span class="p">:</span><span class="s1">&#39;LINESTRING ZM&#39;</span><span class="p">,</span>
+            <span class="mi">3003</span><span class="p">:</span><span class="s1">&#39;POLYGON ZM&#39;</span><span class="p">,</span>
+            <span class="mi">3004</span><span class="p">:</span><span class="s1">&#39;MULTIPOINT ZM&#39;</span><span class="p">,</span>
+            <span class="mi">3005</span><span class="p">:</span><span class="s1">&#39;MULTILINESTRING ZM&#39;</span><span class="p">,</span>
+            <span class="mi">3006</span><span class="p">:</span><span class="s1">&#39;MULTIPOLYGON ZM&#39;</span><span class="p">,</span>
+            <span class="mi">3007</span><span class="p">:</span><span class="s1">&#39;GEOMETRYCOLLECTION ZM&#39;</span><span class="p">,</span>
+            <span class="mi">1000002</span><span class="p">:</span><span class="s1">&#39;COMPRESSED LINESTRING&#39;</span><span class="p">,</span>
+            <span class="mi">1000003</span><span class="p">:</span><span class="s1">&#39;COMPRESSED POLYGON&#39;</span><span class="p">,</span>
+            <span class="mi">1001002</span><span class="p">:</span><span class="s1">&#39;COMPRESSED LINESTRING Z&#39;</span><span class="p">,</span>
+            <span class="mi">1001003</span><span class="p">:</span><span class="s1">&#39;COMPRESSED POLYGON Z&#39;</span><span class="p">,</span>
+            <span class="mi">1002002</span><span class="p">:</span><span class="s1">&#39;COMPRESSED LINESTRING M&#39;</span><span class="p">,</span>
+            <span class="mi">1002003</span><span class="p">:</span><span class="s1">&#39;COMPRESSED POLYGON M&#39;</span><span class="p">,</span>
+            <span class="mi">1003002</span><span class="p">:</span><span class="s1">&#39;COMPRESSED LINESTRING ZM&#39;</span><span class="p">,</span>
+            <span class="mi">1003003</span><span class="p">:</span><span class="s1">&#39;COMPRESSED POLYGON ZM&#39;</span><span class="p">}</span>
+
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;SPATIALITE_SECURITY&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;relaxed&#39;</span>
+
+<div class="viewcode-block" id="Geodatabase"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase">[docs]</a><span class="k">class</span> <span class="nc">Geodatabase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Geodatabase.</span>
+<span class="sd">    </span>
+<span class="sd">    Available methods:</span>
+<span class="sd">    </span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">version</span><span class="o">=</span><span class="s1">&#39;22.01&#39;</span>
+    
+    
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">db</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;:memory:&#39;</span><span class="p">,</span> 
+                 <span class="n">srid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">31370</span><span class="p">,</span> 
+                 <span class="n">recreate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :parameter db:       Path to database. The default is &#39;:memory:&#39;.</span>
+<span class="sd">        :parameter srid:     The Spatial Reference IDentifier or SRID. </span>
+<span class="sd">        :parameter recreate: Should the database be re-created if it exists? </span>
+<span class="sd">        </span>
+<span class="sd">        .. _srid : https://en.wikipedia.org/wiki/Spatial_reference_system</span>
+<span class="sd">        </span>
+<span class="sd">        :example:</span>
+<span class="sd">            </span>
+<span class="sd">            &gt;&gt;&gt; from geodatabase import geodatabase as gdb</span>
+<span class="sd">            &gt;&gt;&gt; db=gdb()</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">dbExists</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">db</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>       
+        <span class="k">if</span> <span class="n">dbExists</span> <span class="ow">and</span> <span class="n">recreate</span><span class="o">==</span><span class="kc">True</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">db</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="n">database</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">db</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">database</span><span class="o">.</span><span class="n">enable_load_extension</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">database</span><span class="o">.</span><span class="n">load_extension</span><span class="p">(</span><span class="s2">&quot;mod_spatialite&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">dbExists</span> <span class="ow">or</span> <span class="n">recreate</span><span class="o">==</span><span class="kc">True</span><span class="p">:</span>
+            <span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;select InitSpatialMetaData(1);&#39;</span><span class="p">)</span>
+            <span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;select UpdateLayerStatistics();&#39;</span><span class="p">)</span>
+        <span class="n">database</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+        <span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;drop table if exists data_licenses&#39;</span><span class="p">)</span>
+        <span class="c1">#database.execute(&#39;VACUUM&#39;)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">database</span> <span class="o">=</span> <span class="n">database</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">srid</span> <span class="o">=</span> <span class="n">srid</span>
+        
+<div class="viewcode-block" id="Geodatabase.attach"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.attach">[docs]</a>    <span class="k">def</span> <span class="nf">attach</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+               <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
+               <span class="n">alias</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Attach external db.</span>
+<span class="sd">        </span>
+<span class="sd">        :example:</span>
+<span class="sd">            &gt;&gt;&gt; attach(&#39;c:\path\to\mydb.sqlite&#39;,&#39;mydb&#39;)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;attach &#39;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&#39; as </span><span class="si">{</span><span class="n">alias</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">alias</span><span class="si">}</span><span class="s1">:attach:path=</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Geodatabase.checksForTable"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.checksForTable">[docs]</a>    <span class="k">def</span> <span class="nf">checksForTable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                       <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Detects table `without`_ rowid or with `shadowed`_ rowid.</span>
+<span class="sd">        </span>
+<span class="sd">        .. _shadowed: https://www.gaia-gis.it/fossil/libspatialite/wiki?name=Shadowed+ROWID+issues</span>
+<span class="sd">        .. _without:  https://www.gaia-gis.it/fossil/libspatialite/wiki?name=4.2.0+functions#5</span>
+
+<span class="sd">        :raises Exception: Exception raised if either shadowed rowid or absence </span>
+<span class="sd">                           of rowid raises are detected.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ShadowedRowid</span><span class="p">,</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                    select CheckShadowedRowid(&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">&#39;)</span>
+<span class="s1">                    &#39;&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">ShadowedRowid</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">:CheckShadowedRowid&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                            Table </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1"> has a physical</span>
+<span class="s1">                            column named &quot;rowid&quot; (caseless)</span>
+<span class="s1">                            shadowing the real ROWID.&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">:CheckShadowedRowid&#39;</span><span class="p">)</span>
+
+        <span class="n">WithoutRowid</span><span class="p">,</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                    select CheckWithoutRowid(&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">&#39;)</span>
+<span class="s1">                    &#39;&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">WithoutRowid</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">:CheckWithoutRowid&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                            Table </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1"> was created by</span>
+<span class="s1">                            specifying a WITHOUT ROWID clause.&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">:CheckWithoutRowid&#39;</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Geodatabase.close"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Closes the geodatabase.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;select UpdateLayerStatistics();&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Geodatabase.correctGeometry"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.correctGeometry">[docs]</a>    <span class="k">def</span> <span class="nf">correctGeometry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                        <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                        <span class="n">geometry</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;geometry&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Correct geometries</span>
+<span class="sd">        </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">before</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geometryCountOfErrors</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="n">geometry</span><span class="o">=</span><span class="n">geometry</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">before</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">:countOfErrors:</span><span class="si">{</span><span class="n">before</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">:countOfErrors:trying to correct geometries&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                update </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1"> SET </span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1"> = st_makeValid(</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">)</span>
+<span class="s1">                where ST_IsValid(</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">) &lt;&gt;1</span>
+<span class="s1">                &#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="n">after</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">geometryCountOfErrors</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="n">geometry</span><span class="o">=</span><span class="n">geometry</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">:countOfErrors:</span><span class="si">{</span><span class="n">after</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">after</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">:countOfErrors still &gt;0 after correction&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">:countOfErrors=0 after correction!&#39;</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="Geodatabase.createSpatialIndex"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.createSpatialIndex">[docs]</a>    <span class="k">def</span> <span class="nf">createSpatialIndex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                           <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                           <span class="n">geometry</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;geometry&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a spatial index.</span>
+
+<span class="sd">        :raises exception: Exception is thrown if the creation of </span>
+<span class="sd">                           spatial index failed.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">:createSpatialIndex:start&#39;</span><span class="p">)</span>
+        
+        <span class="n">SpatialIndex</span><span class="p">,</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                    select createSpatialIndex(</span>
+<span class="s1">                                                &#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">&#39;               ,</span>
+<span class="s1">                                                &#39;</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">&#39;</span>
+<span class="s1">                                             )</span>
+<span class="s1">                             &#39;&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">SpatialIndex</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">:createSpatialIndex:end&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">:createSpatialIndex error.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Creation of spatial index for </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1"> failed&#39;</span><span class="p">)</span></div>
+            
+    <span class="k">def</span> <span class="nf">dropTable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                  <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;select dropTable(NULL,&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s2">&#39;)&quot;</span><span class="p">)</span>
+            
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">query</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">queryParameters</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;query:start&#39;</span><span class="p">)</span>
+        
+        <span class="n">r</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">queryParameters</span><span class="p">))</span>
+        
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;query:end&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">r</span>
+
+<div class="viewcode-block" id="Geodatabase.executeScript"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.executeScript">[docs]</a>    <span class="k">def</span> <span class="nf">executeScript</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                      <span class="o">**</span><span class="n">queryParameters</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute a sql script. The script can contain many SQLs separated</span>
+<span class="sd">        by ;.</span>
+
+<span class="sd">        :parameter query: Path to the sql query. Do not specify the .sql</span>
+<span class="sd">                          extension.</span>
+<span class="sd">            </span>
+<span class="sd">        :queryParameters: list of &quot;parameter=value&quot; parameters that can be </span>
+<span class="sd">                          used inside the query.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s1">:query:start&#39;</span><span class="p">)</span>
+        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;../sql/</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s1">.sql&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">queryParameters</span><span class="p">)</span>
+
+        <span class="n">r</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">executescript</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+        
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s1">:query:end&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">r</span></div>
+
+<div class="viewcode-block" id="Geodatabase.findConnectedComponents"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.findConnectedComponents">[docs]</a>    <span class="k">def</span> <span class="nf">findConnectedComponents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                <span class="n">inputTable</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                                <span class="n">edgesColumnNames</span> <span class="p">:[</span><span class="nb">str</span><span class="p">,</span><span class="nb">str</span><span class="p">],</span>
+                                <span class="n">outputTable</span><span class="p">:</span> <span class="nb">str</span>
+                                <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds connected components of an undirected graph.</span>
+<span class="sd">        </span>
+<span class="sd">        :param inputTable: DESCRIPTION</span>
+<span class="sd">        :type inputTable: str</span>
+<span class="sd">        :param edgesColumnNames: DESCRIPTION</span>
+<span class="sd">        :type edgesColumnNames: list</span>
+<span class="sd">        :param outputTable: DESCRIPTION</span>
+<span class="sd">        :type outputTable: str</span>
+<span class="sd">        :return: DESCRIPTION</span>
+<span class="sd">        </span>
+<span class="sd">        :rtype: TYPE</span>
+<span class="sd">        </span>
+<span class="sd">        :example:</span>
+<span class="sd">            </span>
+<span class="sd">            &gt;&gt;&gt; db.findConnectedComponents(&#39;t01_edges&#39;,[&#39;elt_a&#39;,&#39;elt_b&#39;],&#39;t02_cc&#39;)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">inputTable</span><span class="si">}</span><span class="s1">:findConnectedComponents:outputTable=</span><span class="si">{</span><span class="n">outputTable</span><span class="si">}</span><span class="s1">:start&#39;</span><span class="p">)</span>
+
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                                select </span><span class="si">{</span><span class="n">edgesColumnNames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1"> as a,</span>
+<span class="s1">                                       </span><span class="si">{</span><span class="n">edgesColumnNames</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1"> as b</span>
+<span class="s1">                                from </span><span class="si">{</span><span class="n">inputTable</span><span class="si">}</span><span class="s1"></span>
+<span class="s1">                            &#39;&#39;&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="p">)</span>
+        
+        <span class="n">connectedComponents</span> <span class="o">=</span> <span class="n">connectedComponentsLabeler</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span><span class="o">.</span><span class="n">getConnectedCompontents</span><span class="p">()</span>
+        <span class="n">connectedComponents</span><span class="o">.</span><span class="n">to_sql</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">outputTable</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">if_exists</span><span class="o">=</span><span class="s2">&quot;replace&quot;</span><span class="p">)</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">inputTable</span><span class="si">}</span><span class="s1">:findConnectedComponents:outputTable=</span><span class="si">{</span><span class="n">outputTable</span><span class="si">}</span><span class="s1">:end&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span><span class="p">(</span><span class="n">connectedComponents</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">geometryCountOfErrors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                              <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                              <span class="n">geometry</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;geometry&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+
+        <span class="n">countOfErrors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                              select count(*)</span>
+<span class="s1">                              from </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1"></span>
+<span class="s1">                              where ST_IsValid(</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">,1)&lt;&gt;1</span>
+<span class="s1">                              &#39;&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">countOfErrors</span><span class="p">)</span>
+
+
+    
+    <span class="k">def</span> <span class="nf">getColumnMaxLength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                           <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                           <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;select max(length(</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s1">)) from </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">getColumnCountOfDistinctValues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                           <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                           <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;select count(distinct </span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s1">) from </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+
+<div class="viewcode-block" id="Geodatabase.getGeometriesMetadata"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.getGeometriesMetadata">[docs]</a>    <span class="k">def</span> <span class="nf">getGeometriesMetadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get geometries metadata.</span>
+
+<span class="sd">        :returns: DataFrame with available metadata on geometries.</span>
+<span class="sd">            </span>
+<span class="sd">        :example:</span>
+<span class="sd">            </span>
+<span class="sd">            &gt;&gt;&gt; db.getGeometriesMetadata()</span>
+<span class="sd">            </span>
+<span class="sd">            .. code-block::</span>
+<span class="sd">                </span>
+<span class="sd">                               f_geometry_column  geometry_type  coord_dimension   srid  spatial_index_enabled</span>
+<span class="sd">                f_table_name                                                                                  </span>
+<span class="sd">                t01_zip                 geometry           3003                4  31370                      1</span>
+<span class="sd">                t04_zip_sample          geometry              3                2  31370                      1</span>
+
+<span class="sd">        :example:</span>
+<span class="sd">            </span>
+<span class="sd">            &gt;&gt;&gt; db.getGeometriesMetadata().loc[&#39;t01_zip&#39;,:]</span>
+<span class="sd">            f_geometry_column        geometry</span>
+<span class="sd">            geometry_type                3003</span>
+<span class="sd">            coord_dimension                 4</span>
+<span class="sd">            srid                        31370</span>
+<span class="sd">            spatial_index_enabled           1</span>
+<span class="sd">            Name: t01_zip, dtype: object</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                            select f_table_name, </span>
+<span class="s1">                                   f_geometry_column, </span>
+<span class="s1">                                   geometry_type, </span>
+<span class="s1">                                   coord_dimension, </span>
+<span class="s1">                                   srid, </span>
+<span class="s1">                                   spatial_index_enabled</span>
+<span class="s1">                            from geometry_columns</span>
+<span class="s1">                           &#39;&#39;&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="p">,</span><span class="n">index_col</span><span class="o">=</span><span class="s1">&#39;f_table_name&#39;</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="Geodatabase.getListOfColumns"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.getListOfColumns">[docs]</a>    <span class="k">def</span> <span class="nf">getListOfColumns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                         <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                         <span class="n">withLengths</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                         <span class="n">withDistincts</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        </span>
+<span class="sd">        Documents the structure and content of a table. The returned </span>
+<span class="sd">        pandas DataFrame has got this structure:</span>
+<span class="sd">            * cd_column_type: [&#39;INTEGER&#39;,&#39;DOUBLE&#39;,&#39;TEXT&#39;,&#39;POLYGON&#39;,...]</span>
+<span class="sd">            * fl_notnull_constraint: 1=nulls are not allowed, 0=nulls allowed</span>
+<span class="sd">            * default_value</span>
+<span class="sd">            * fl_primary_key: 1=a primary key, 0=not a primary key</span>
+<span class="sd">            * ms_max_length: max length of column expressed in characters or bytes</span>
+<span class="sd">        </span>
+<span class="sd">        :example:</span>
+<span class="sd">            </span>
+<span class="sd">            &gt;&gt;&gt; db.getListOfColumns(&#39;t01_zip&#39;,withLengths=True)</span>
+<span class="sd">            </span>
+<span class="sd">        .. code-block:: </span>
+<span class="sd">            </span>
+<span class="sd">                           cd_column_type   fl_primary_key  ms_max_length</span>
+<span class="sd">            tx_column_name                                                                                   </span>
+<span class="sd">            pk_uid                INTEGER                1            4.0</span>
+<span class="sd">            join_count            INTEGER                0            5.0</span>
+<span class="sd">            nouveau_po               TEXT                0            4.0</span>
+<span class="sd">            frequency             INTEGER                0            2.0</span>
+<span class="sd">            cp_speciau            INTEGER                0            1.0</span>
+<span class="sd">            shape_leng             DOUBLE                0           13.0</span>
+<span class="sd">            shape_area             DOUBLE                0           13.0</span>
+<span class="sd">            geometry              POLYGON                0       142708.0</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">table</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">getListOfTables</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">]:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1"> is not a table&#39;</span><span class="p">)</span>
+            <span class="k">return</span><span class="p">()</span>
+        
+        <span class="n">listOfColumns</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                              select name       as tx_column_name,</span>
+<span class="s1">                                     type       as cd_column_type,</span>
+<span class="s1">                                     &quot;notnull&quot;  as fl_notnull_constraint,</span>
+<span class="s1">                                     dflt_value as default_value,</span>
+<span class="s1">                                     pk         as fl_primary_key</span>
+<span class="s1">                              from pragma_table_info(&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">&#39;)</span>
+<span class="s1">                             &#39;&#39;&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="p">,</span><span class="n">index_col</span><span class="o">=</span><span class="s1">&#39;tx_column_name&#39;</span><span class="p">)</span>
+
+        <span class="n">listOfColumns</span> <span class="o">=</span> <span class="n">listOfColumns</span><span class="o">.</span><span class="n">astype</span><span class="p">({</span><span class="s1">&#39;fl_notnull_constraint&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+                                              <span class="s1">&#39;fl_primary_key&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">})</span>
+
+        <span class="k">if</span> <span class="n">withLengths</span><span class="p">:</span>
+            <span class="n">listOfColumnsElt</span><span class="o">=</span><span class="n">listOfColumns</span><span class="o">.</span><span class="n">loc</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">listOfColumns</span><span class="o">.</span><span class="n">itertuples</span><span class="p">():</span>
+                <span class="n">listOfColumnsElt</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span><span class="s1">&#39;ms_max_length&#39;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getColumnMaxLength</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="n">row</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span>
+
+            <span class="n">listOfColumns</span> <span class="o">=</span> <span class="n">listOfColumns</span><span class="o">.</span><span class="n">astype</span><span class="p">({</span><span class="s1">&#39;ms_max_length&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">})</span>
+
+        <span class="k">if</span> <span class="n">withDistincts</span><span class="p">:</span>
+            <span class="n">listOfColumnsElt</span><span class="o">=</span><span class="n">listOfColumns</span><span class="o">.</span><span class="n">loc</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">listOfColumns</span><span class="o">.</span><span class="n">itertuples</span><span class="p">():</span>
+                <span class="n">listOfColumnsElt</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span><span class="s1">&#39;ms_countOf_distinct&#39;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getColumnCountOfDistinctValues</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="n">row</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span>
+
+            <span class="n">listOfColumns</span> <span class="o">=</span> <span class="n">listOfColumns</span><span class="o">.</span><span class="n">astype</span><span class="p">({</span><span class="s1">&#39;ms_countOf_distinct&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">})</span>
+
+        
+        <span class="k">return</span><span class="p">(</span><span class="n">listOfColumns</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Geodatabase.getListOfTables"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.getListOfTables">[docs]</a>    <span class="k">def</span> <span class="nf">getListOfTables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get list of tables in geodatabase (including indexes and count of rows).</span>
+
+<span class="sd">        :example:</span>
+<span class="sd">            </span>
+<span class="sd">            &gt;&gt;&gt; db.getListOfTables()</span>
+<span class="sd">            </span>
+<span class="sd">        .. code-block::</span>
+<span class="sd">            </span>
+<span class="sd">                           ms_countOf_geometries   ms_countOf_spatial_indexes   ms_countOf_rows</span>
+<span class="sd">            f_table_name</span>
+<span class="sd">            T01_zip                             1                           1           1268.0</span>
+<span class="sd">            T02_PIP                             0                           0         225263.0</span>
+<span class="sd">            t03_sample                          0                           0         225262.0</span>
+<span class="sd">            t04_sample                          0                           0              2.0</span>
+<span class="sd">            t04_zip                             1                           1             10.0</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">listOfTables</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            select a.type,</span>
+<span class="s2">                   a.f_table_name,</span>
+<span class="s2">                   count(distinct f_geometry_column) as ms_countOf_geometries,</span>
+<span class="s2">                   coalesce(sum(spatial_index_enabled),0) as ms_countOf_spatial_indexes</span>
+<span class="s2">            from (</span>
+<span class="s2">                  select type, name as f_table_name</span>
+<span class="s2">                  from sqlite_master </span>
+<span class="s2">                  where type in (&#39;table&#39;,&#39;view&#39;) </span>
+<span class="s2">                  and name NOT LIKE &#39;sqlite_%&#39;</span>
+<span class="s2">                  and name NOT LIKE &#39;idx_%&#39;</span>
+<span class="s2">                  and name NOT IN (</span>
+<span class="s2">                    &#39;ElementaryGeometries&#39;,</span>
+<span class="s2">                    &#39;geometry_columns&#39;,</span>
+<span class="s2">                    &#39;geometry_columns_auth&#39;,</span>
+<span class="s2">                    &#39;geometry_columns_field_infos&#39;,</span>
+<span class="s2">                    &#39;geometry_columns_statistics&#39;,</span>
+<span class="s2">                    &#39;geometry_columns_time&#39;,</span>
+<span class="s2">                    &#39;KNN&#39;,</span>
+<span class="s2">                    &#39;spatial_ref_sys&#39;,</span>
+<span class="s2">                    &#39;spatial_ref_sys_aux&#39;,</span>
+<span class="s2">                    &#39;SpatialIndex&#39;,</span>
+<span class="s2">                    &#39;spatialite_history&#39;,</span>
+<span class="s2">                    &#39;sql_statements_log&#39;,</span>
+<span class="s2">                    &#39;views_geometry_columns&#39;,</span>
+<span class="s2">                    &#39;views_geometry_columns_auth&#39;,</span>
+<span class="s2">                    &#39;views_geometry_columns_field_infos&#39;,</span>
+<span class="s2">                    &#39;views_geometry_columns_statistics&#39;,</span>
+<span class="s2">                    &#39;virts_geometry_columns&#39;,</span>
+<span class="s2">                    &#39;virts_geometry_columns_auth&#39;,</span>
+<span class="s2">                    &#39;virts_geometry_columns_field_infos&#39;,</span>
+<span class="s2">                    &#39;virts_geometry_columns_statistics&#39;,</span>
+<span class="s2">                    &#39;geom_cols_ref_sys&#39;,</span>
+<span class="s2">                    &#39;spatial_ref_sys_all&#39;,</span>
+<span class="s2">                    &#39;vector_layers&#39;,</span>
+<span class="s2">                    &#39;vector_layers_auth&#39;,</span>
+<span class="s2">                    &#39;vector_layers_field_infos&#39;,</span>
+<span class="s2">                    &#39;vector_layers_statistics&#39;</span>
+<span class="s2">                                    )</span>
+<span class="s2">                  ) a LEFT JOIN geometry_columns b</span>
+<span class="s2">            on lower(a.f_table_name)=lower(b.f_table_name)</span>
+<span class="s2">            group by 1, 2</span>
+<span class="s2">                                     &quot;&quot;&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="p">,</span><span class="n">index_col</span><span class="o">=</span><span class="s1">&#39;f_table_name&#39;</span><span class="p">)</span>
+                                     
+        <span class="n">listOfTablesElt</span><span class="o">=</span><span class="n">listOfTables</span><span class="o">.</span><span class="n">loc</span><span class="p">()</span>
+        
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">listOfTables</span><span class="o">.</span><span class="n">itertuples</span><span class="p">():</span>
+            <span class="n">listOfTablesElt</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span><span class="s1">&#39;ms_countOf_rows&#39;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getTableCountOfRows</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span>
+    
+        <span class="k">if</span> <span class="n">listOfTables</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">listOfTables</span> <span class="o">=</span> <span class="n">listOfTables</span><span class="o">.</span><span class="n">astype</span><span class="p">({</span><span class="s1">&#39;ms_countOf_geometries&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                                                <span class="s1">&#39;ms_countOf_spatial_indexes&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span>
+                                                <span class="s1">&#39;ms_countOf_rows&#39;</span><span class="p">:</span><span class="nb">int</span><span class="p">})</span>
+        
+        <span class="k">return</span><span class="p">(</span><span class="n">listOfTables</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Geodatabase.getTableCountOfRows"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.getTableCountOfRows">[docs]</a>    <span class="k">def</span> <span class="nf">getTableCountOfRows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                            <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Counts the number of rows in table.</span>
+<span class="sd">            </span>
+<span class="sd">        :example:</span>
+<span class="sd">            </span>
+<span class="sd">            &gt;&gt;&gt; db.getTableCountOfRows(&#39;T01_ZIP&#39;)</span>
+<span class="sd">            1268</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;select count(*) from </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">getTableHead</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                     <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;select rowid, * from </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1"> limit 10&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="p">,</span><span class="n">index_col</span><span class="o">=</span><span class="s2">&quot;rowid&quot;</span><span class="p">)</span>
+    
+            
+<div class="viewcode-block" id="Geodatabase.inspectGeometry"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.inspectGeometry">[docs]</a>    <span class="k">def</span> <span class="nf">inspectGeometry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                        <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                        <span class="n">geometry</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;geometry&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Inspects the nature of a table geometry.</span>
+
+<span class="sd">        :return: List of *(geomType, srid, coordDimension, ms_countof_rows)* </span>
+<span class="sd">                 t-uples.</span>
+<span class="sd">        </span>
+<span class="sd">        :example:</span>
+<span class="sd">            </span>
+<span class="sd">            &gt;&gt;&gt; db.inspectGeometry(&#39;T01_ZIP&#39;)</span>
+<span class="sd">            [(&#39;POLYGON ZM&#39;, 31370, &#39;XYZM&#39;, 1268)]</span>
+<span class="sd">        </span>
+<span class="sd">        .. warning:: </span>
+<span class="sd">            </span>
+<span class="sd">            a Geometry can contain various types of geometries </span>
+<span class="sd">            (eg: both Polygons and Multipolygons). As a consequence</span>
+<span class="sd">            the returned list can contain multiple elements.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">res</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                select GeometryType(&quot;</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">&quot;)   as geomType, </span>
+<span class="s1">                       Srid(&quot;</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">&quot;)           as srid, </span>
+<span class="s1">                       CoordDimension(&quot;</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">&quot;) as coordDimension,</span>
+<span class="s1">                       count(*)                     as ms_countof_rows</span>
+<span class="s1">                from </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1"></span>
+<span class="s1">                where </span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1"> is not null</span>
+<span class="s1">                group by 1, 2, 3</span>
+<span class="s1">             &#39;&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        
+        <span class="k">return</span><span class="p">(</span><span class="n">res</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="Geodatabase.loadCsv"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.loadCsv">[docs]</a>    <span class="k">def</span> <span class="nf">loadCsv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">csvFile</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="n">if_exists</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;fail&#39;</span><span class="p">,</span><span class="s1">&#39;replace&#39;</span><span class="p">,</span><span class="s1">&#39;append&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;replace&#39;</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">readParameters</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads csv file and into a table.</span>
+
+<span class="sd">        :parameter csvFile:            Path to csv file. File extension should </span>
+<span class="sd">                                       be mentionned.</span>
+<span class="sd">        :parameter table:              Table name.</span>
+<span class="sd">        :parameter if_exists:          What to do if table already exists. </span>
+<span class="sd">        :parameter readParameters:     Parameters for the pandas.read_csv </span>
+<span class="sd">                                       function.</span>
+<span class="sd">        </span>
+<span class="sd">        :return: void</span>
+<span class="sd">        </span>
+<span class="sd">        :example:</span>
+<span class="sd">            </span>
+<span class="sd">            &gt;&gt;&gt; dtype={</span>
+<span class="sd">            &gt;&gt;&gt;        &#39;ADR_ID&#39;:&#39;str&#39;, </span>
+<span class="sd">            &gt;&gt;&gt;        &#39;ADR_CREAT&#39;:&#39;str&#39;, </span>
+<span class="sd">            &gt;&gt;&gt;        &#39;ADR_MODIF&#39;:&#39;str&#39;,</span>
+<span class="sd">            &gt;&gt;&gt;        &#39;X&#39;:np.float64, </span>
+<span class="sd">            &gt;&gt;&gt;        &#39;Y&#39;:np.float64</span>
+<span class="sd">            &gt;&gt;&gt;       }</span>
+<span class="sd">            &gt;&gt;&gt; parse_dates=[&#39;ADR_CREAT&#39;, &#39;ADR_MODIF&#39;]</span>
+<span class="sd">            &gt;&gt;&gt; db.loadCsv(&#39;myFile.csv&#39;,</span>
+<span class="sd">            &gt;&gt;&gt;            &#39;myTable&#39;,</span>
+<span class="sd">            &gt;&gt;&gt;            dtype=dtype,</span>
+<span class="sd">            &gt;&gt;&gt;            parse_dates=parse_dates,</span>
+<span class="sd">            &gt;&gt;&gt;            sep=&#39;|&#39;)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">:loadCsv:csvFile=</span><span class="si">{</span><span class="n">csvFile</span><span class="si">}</span><span class="s1">:start&#39;</span><span class="p">)</span>
+        
+        <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">csvFile</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">readParameters</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">to_sql</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="p">,</span><span class="n">if_exists</span><span class="o">=</span><span class="n">if_exists</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">:loadCsv:csvFile=</span><span class="si">{</span><span class="n">csvFile</span><span class="si">}</span><span class="s1">:end&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">loadDataFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">DataFrame</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+                      <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                      <span class="n">if_exists</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;fail&#39;</span><span class="p">,</span><span class="s1">&#39;replace&#39;</span><span class="p">,</span><span class="s1">&#39;append&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;replace&#39;</span><span class="p">,</span>
+                      <span class="o">**</span><span class="n">readParameters</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="Geodatabase.loadEmbeddedCsv"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.loadEmbeddedCsv">[docs]</a>    <span class="k">def</span> <span class="nf">loadEmbeddedCsv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                        <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                        <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                        <span class="n">if_exists</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;fail&#39;</span><span class="p">,</span><span class="s1">&#39;replace&#39;</span><span class="p">,</span><span class="s1">&#39;append&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;replace&#39;</span><span class="p">,</span>
+                        <span class="o">**</span><span class="n">readParameters</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads an embedded csv file and into a table.</span>
+
+<span class="sd">        :parameter file:               Embedded csv file.</span>
+<span class="sd">        :parameter table:              Table name.</span>
+<span class="sd">        :parameter if_exists:          What to do if table already exists. </span>
+<span class="sd">        :parameter readParameters:     Parameters for the pandas.read_csv </span>
+<span class="sd">                                       function.</span>
+<span class="sd">        </span>
+<span class="sd">        :return: void</span>
+<span class="sd">        </span>
+<span class="sd">        :example:</span>
+<span class="sd">            </span>
+<span class="sd">            &gt;&gt;&gt; file=&#39;&#39;&#39;</span>
+<span class="sd">            &gt;&gt;&gt; cd_sex|tx_sex</span>
+<span class="sd">            &gt;&gt;&gt; M|Male</span>
+<span class="sd">            &gt;&gt;&gt; F|Female</span>
+<span class="sd">            &gt;&gt;&gt; &#39;&#39;&#39;</span>
+<span class="sd">            &gt;&gt;&gt; db.loadEmbeddedCsv(file,&#39;t_sex&#39;,sep=&#39;|&#39;)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">:loadEmbeddedCsv:start&#39;</span><span class="p">)</span>
+        
+        <span class="n">csvFile</span><span class="o">=</span><span class="n">StringIO</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">csvFile</span><span class="p">,</span> 
+                    <span class="o">**</span><span class="n">readParameters</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">to_sql</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="p">,</span><span class="n">if_exists</span><span class="o">=</span><span class="n">if_exists</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">:loadEmbeddedCsv:end&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Geodatabase.loadShp"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.loadShp">[docs]</a>    <span class="k">def</span> <span class="nf">loadShp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">shapeFile</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;CP1252&#39;</span><span class="p">,</span>
+                <span class="n">srid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads a shapefile and spatially indexes the resulting table.</span>
+<span class="sd">        </span>
+<span class="sd">        :parameter shapeFile: Path to shapefile. File extension should be </span>
+<span class="sd">                              .shp and cannot be mentionned in shapeFile.</span>
+<span class="sd">        :parameter table:     Name of the table to be created. This table </span>
+<span class="sd">                              will be automatically spatially indexed.</span>
+<span class="sd">        :parameter encoding:  The character encoding adopted by the DBF </span>
+<span class="sd">                              member, as e.g. UTF-8 or CP1252. </span>
+<span class="sd">        :parameter srid:      EPSG SRID value. </span>
+
+<span class="sd">        :return: void</span>
+<span class="sd">        </span>
+<span class="sd">        </span>
+<span class="sd">        :example:</span>
+<span class="sd">        </span>
+<span class="sd">            &gt;&gt;&gt; import geodatabase as gdb </span>
+<span class="sd">            &gt;&gt;&gt; db=gdb.geodatabase()</span>
+<span class="sd">            &gt;&gt;&gt; db.loadShp(&#39;C:/.../postaldistricts&#39;,&#39;T01_zip&#39;) </span>
+<span class="sd">            Loading shapefile at &#39;C:/.../postaldistricts&#39; into SQLite table &#39;T01_zip&#39;</span>
+<span class="sd">            Inserted 1268 rows into &#39;T01_zip&#39; from SHAPEFILE</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">:loadShp:shapeFile=</span><span class="si">{</span><span class="n">shapeFile</span><span class="si">}</span><span class="s1">:start&#39;</span><span class="p">)</span>
+    
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">srid</span><span class="p">:</span>
+            <span class="n">srid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">srid</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            select ImportSHP(&#39;</span><span class="si">{</span><span class="n">shapeFile</span><span class="si">}</span><span class="s2">&#39;,&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s2">&#39;,&#39;</span><span class="si">{</span><span class="n">encoding</span><span class="si">}</span><span class="s2">&#39;,</span><span class="si">{</span><span class="n">srid</span><span class="si">}</span><span class="s2">)</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">:loadShp:shapeFile=</span><span class="si">{</span><span class="n">shapeFile</span><span class="si">}</span><span class="s1">:end&#39;</span><span class="p">)</span></div>
+        
+        <span class="c1">#self.createSpatialIndex(table)</span>
+            
+    <span class="k">def</span> <span class="nf">loadShpZip</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+    
+
+<div class="viewcode-block" id="Geodatabase.pointInPolygon"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.pointInPolygon">[docs]</a>    <span class="k">def</span> <span class="nf">pointInPolygon</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                       <span class="n">points</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                       <span class="n">polygons</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                       <span class="n">outputTable</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Assigns point to polygons.</span>
+
+<span class="sd">        :parameter points: Name of the table containing points.</span>
+<span class="sd">        :parameter polygons: Name of the table containing polygons.</span>
+<span class="sd">        :parameter outputTable: Name of the output table.</span>
+<span class="sd">        :parameter queryParameters: List of &quot;parameter=value&quot;. Those </span>
+<span class="sd">                  parameters can be used inside the query.</span>
+
+<span class="sd">        :returns: void.</span>
+<span class="sd">        </span>
+<span class="sd">        .. warning::</span>
+<span class="sd">            </span>
+<span class="sd">            Do not VACUUM your database ! If you do, you risk to break</span>
+<span class="sd">            your link table.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">outputTable</span><span class="si">}</span><span class="s1">:pointInPolygon:points=</span><span class="si">{</span><span class="n">points</span><span class="si">}</span><span class="s1">:polygons=</span><span class="si">{</span><span class="n">polygons</span><span class="si">}</span><span class="s1">:start&#39;</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            create table </span><span class="si">{</span><span class="n">outputTable</span><span class="si">}</span><span class="s2"> as</span>
+<span class="s2">            select pt.rowid as rowid_point, pg.rowid as rowid_polygon</span>
+<span class="s2">            from </span><span class="si">{</span><span class="n">points</span><span class="si">}</span><span class="s2"> as pt, </span><span class="si">{</span><span class="n">polygons</span><span class="si">}</span><span class="s2"> as pg</span>
+<span class="s2">            where st_within(pt.geometry,pg.geometry)</span>
+<span class="s2">            and pt.rowid in ( select rowid</span>
+<span class="s2">                              from spatialIndex</span>
+<span class="s2">                              where f_table_name=&#39;DB=</span><span class="si">{</span><span class="n">points</span><span class="si">}</span><span class="s2">&#39;</span>
+<span class="s2">                                and search_frame=pg.geometry )</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">)</span>
+        
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">outputTable</span><span class="si">}</span><span class="s1">:pointInPolygon:points=</span><span class="si">{</span><span class="n">points</span><span class="si">}</span><span class="s1">:polygons=</span><span class="si">{</span><span class="n">polygons</span><span class="si">}</span><span class="s1">:end&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Geodatabase.recoverGeometry"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.recoverGeometry">[docs]</a>    <span class="k">def</span> <span class="nf">recoverGeometry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                        <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                        <span class="n">geometry</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;geometry&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Recovers geometry, ie, registers the geometry in spatialite&#39;s metadata.</span>
+<span class="sd">        </span>
+
+<span class="sd">        :param table:    Name of the table containing the geometry.</span>
+<span class="sd">        :param geometry: Name of the geometry column.</span>
+
+<span class="sd">        :raises exception: Exception is raised if geometry cannot be recovered.</span>
+
+<span class="sd">        :returns: void</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">inspection</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inspectGeometry</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="n">geometry</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inspection</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">:recoverGeometryColumn failed:More than 1 geometry type&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Recovery of </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1"> failed:More than 1 geometry type&#39;</span><span class="p">)</span>
+             
+        <span class="n">geomType</span><span class="p">,</span><span class="n">srid</span><span class="p">,</span><span class="n">coordDimension</span><span class="p">,</span><span class="n">ms_countof_rows</span><span class="o">=</span><span class="n">inspection</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">geomType</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">geom_types</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">:recoverGeometryColumn failed:Not a geometry&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Recovery of </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1"> failed:Not a geometry&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">srid</span><span class="o">&lt;=</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">:recoverGeometryColumn failed:Srid unknown-Choosing </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">srid</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">srid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">srid</span>
+            
+        <span class="n">geomType</span><span class="o">=</span><span class="n">geomType</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">coordDimension</span><span class="o">=</span><span class="n">coordDimension</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="n">RecoverGeometry</span><span class="p">,</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">            select recoverGeometryColumn(</span>
+<span class="s1">                                         &#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">&#39;         ,</span>
+<span class="s1">                                         &#39;</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">&#39;      ,</span>
+<span class="s1">                                          </span><span class="si">{</span><span class="n">srid</span><span class="si">}</span><span class="s1">           ,</span>
+<span class="s1">                                         &#39;</span><span class="si">{</span><span class="n">geomType</span><span class="si">}</span><span class="s1">&#39;      ,</span>
+<span class="s1">                                         &#39;</span><span class="si">{</span><span class="n">coordDimension</span><span class="si">}</span><span class="s1">&#39;</span>
+<span class="s1">                                         )</span>
+<span class="s1">                     &#39;&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">RecoverGeometry</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">:recoverGeometryColumn:geometry has been recovered&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">:recoverGeometryColumn&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Recovery of </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1"> failed&#39;</span><span class="p">)</span></div>
+            
+
+
+<div class="viewcode-block" id="Geodatabase.recoverSpatialIndex"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.recoverSpatialIndex">[docs]</a>    <span class="k">def</span> <span class="nf">recoverSpatialIndex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                            <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                            <span class="n">geometry</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;geometry&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Recover Spatial Index.</span>
+<span class="sd">                </span>
+<span class="sd">        A delete operation followed by a VACCUM operation could leave an index </span>
+<span class="sd">        in an inconsistent state.</span>
+<span class="sd">        </span>
+<span class="sd">        This method checks for the consistency of the spatial index. If the </span>
+<span class="sd">        spatial index is inconsistent then try to recover the index (ie, rebuild). </span>
+<span class="sd">        If index recovery failed then an exception is thrown.</span>
+
+<span class="sd">        :raises Exception: Raises an Exception if geometry is inconsistent.</span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            Inconsistent indexes can have a dramatic impact. Read</span>
+<span class="sd">            `this note on SpatialIndexes &lt;http://www.gaia-gis.it/gaia-sins/SpatialIndex-Update.pdf&gt;`_ </span>
+<span class="sd">            carefully! Please, run this method if you have</span>
+<span class="sd">            a doubt on the integrity of your spatial index.</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">RecoveredSpatialIndex</span><span class="p">,</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">            select recoverSpatialIndex(&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">&#39;,&#39;</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">&#39;)</span>
+<span class="s1">            &#39;&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">RecoveredSpatialIndex</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">:recoverSpatialIndex:Spatial index is consistent&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1">:recoverSpatialIndex&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Spatial index </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">geometry</span><span class="si">}</span><span class="s1"> is inconsistent&#39;</span><span class="p">)</span></div>
+            
+<div class="viewcode-block" id="Geodatabase.reproject"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.reproject">[docs]</a>    <span class="k">def</span> <span class="nf">reproject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                  <span class="n">inputTable</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                  <span class="n">srid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                  <span class="n">outputTable</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">if_exists</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;fail&#39;</span><span class="p">,</span><span class="s1">&#39;replace&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;fail&#39;</span>
+                  <span class="p">):</span>
+              
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reproject.</span>
+<span class="sd">        </span>
+<span class="sd">        This method reprojects a geometry.</span>
+<span class="sd">        </span>
+<span class="sd">        :param inputTable:    Name of the table containing the geometry to reproject.</span>
+<span class="sd">        :param srid:          Reproject into the Reference System identified by srid.</span>
+<span class="sd">        :param outputTable:   Name of the output table containing the reprojected geometry.</span>
+
+<span class="sd">        :returns: void</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">outputTable</span><span class="p">:</span>
+                <span class="n">outputTable</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">inputTable</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">srid</span><span class="si">}</span><span class="s1">&#39;</span>
+                
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">inputTable</span><span class="si">}</span><span class="s1">:reproject:srid=</span><span class="si">{</span><span class="n">srid</span><span class="si">}</span><span class="s1">:outputTable=</span><span class="si">{</span><span class="n">outputTable</span><span class="si">}</span><span class="s1">:start&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tableExists</span><span class="p">(</span><span class="n">outputTable</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">if_exists</span><span class="o">==</span><span class="s1">&#39;fail&#39;</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">inputTable</span><span class="si">}</span><span class="s1">:reproject:</span><span class="si">{</span><span class="n">outputTable</span><span class="si">}</span><span class="s1"> already exists !&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span><span class="si">{</span><span class="n">outputTable</span><span class="si">}</span><span class="s1"> already exists !&#39;&#39;&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">if_exists</span><span class="o">==</span><span class="s1">&#39;replace&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dropTable</span><span class="p">(</span><span class="n">outputTable</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">inputTable</span><span class="si">}</span><span class="s1">:reproject:</span><span class="si">{</span><span class="n">outputTable</span><span class="si">}</span><span class="s1"> dropped before reproject takes place&#39;</span><span class="p">)</span>
+
+        <span class="n">l</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getListOfColumns</span><span class="p">(</span><span class="n">inputTable</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">l</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;geometry&#39;</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                                create table </span><span class="si">{</span><span class="n">outputTable</span><span class="si">}</span><span class="s1"> as</span>
+<span class="s1">                                select </span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l</span><span class="p">)</span><span class="si">}</span><span class="s1">,st_transform(geometry,</span><span class="si">{</span><span class="n">srid</span><span class="si">}</span><span class="s1">) as geometry</span>
+<span class="s1">                                from </span><span class="si">{</span><span class="n">inputTable</span><span class="si">}</span><span class="s1"></span>
+<span class="s1">                               &#39;&#39;&#39;</span><span class="p">)</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">inputTable</span><span class="si">}</span><span class="s1">:reproject:srid=</span><span class="si">{</span><span class="n">srid</span><span class="si">}</span><span class="s1">:outputTable=</span><span class="si">{</span><span class="n">outputTable</span><span class="si">}</span><span class="s1">:end&#39;</span><span class="p">)</span>
+                    
+        <span class="bp">self</span><span class="o">.</span><span class="n">recoverGeometry</span><span class="p">(</span><span class="n">outputTable</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">createSpatialIndex</span><span class="p">(</span><span class="n">outputTable</span><span class="p">)</span></div>
+        
+    <span class="k">def</span> <span class="nf">tableExists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                    <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+                    
+        <span class="k">if</span> <span class="n">table</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">getListOfTables</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="Geodatabase.toCsv"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.toCsv">[docs]</a>    <span class="k">def</span> <span class="nf">toCsv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+              <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+              <span class="n">archive_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span>
+              <span class="n">outputDirectory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span>
+              <span class="n">columnsToExclude</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Exports a table to a csv file.</span>
+
+<span class="sd">        :parameter table:            Table name.</span>
+<span class="sd">        :parameter outputDirectory:  Output directory. </span>
+<span class="sd">        :parameter columnsToExclude: Columns to exclude from export. </span>
+
+<span class="sd">        :returns: void</span>
+<span class="sd">        </span>
+<span class="sd">        :example:</span>
+<span class="sd">            </span>
+<span class="sd">            &gt;&gt;&gt; db.toCsv(&#39;T01_table&#39;,&#39;../output&#39;)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">:toCsv:start&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">archive_name</span><span class="p">:</span>
+            <span class="n">archive_name</span><span class="o">=</span><span class="n">table</span>
+        
+        <span class="n">df</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;select * from </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="p">)</span>  
+        
+        <span class="c1">#columnsToExport=set(df.columns).difference(columnsToExclude) </span>
+        <span class="n">columnsToExport</span><span class="o">=</span><span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">columnsToExclude</span><span class="p">]</span>
+        
+        <span class="n">compression_options</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;zip&#39;</span><span class="p">,</span> <span class="n">archive_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.csv&#39;</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="n">columnsToExport</span><span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">outputDirectory</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">archive_name</span><span class="si">}</span><span class="s1">.zip&#39;</span><span class="p">,</span>
+                                         <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;|&#39;</span><span class="p">,</span>
+                                         <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span>
+                                         <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                         <span class="n">compression</span><span class="o">=</span><span class="n">compression_options</span><span class="p">,</span>
+                                         <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+        
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">:toCsv:end&#39;</span><span class="p">)</span></div>
+             
+        
+<div class="viewcode-block" id="Geodatabase.toSas"><a class="viewcode-back" href="../geodatabase.html#geodatabase.Geodatabase.toSas">[docs]</a>    <span class="k">def</span> <span class="nf">toSas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+              <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+              <span class="n">archive_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">outputDirectory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span>
+              <span class="n">columnsToExclude</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;geometry&#39;</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create as sas program to import the csv export of a table.</span>
+
+<span class="sd">        :parameter table: Table name.</span>
+<span class="sd">        :parameter outputDirectory: Output directory. The default is &#39;.&#39;.</span>
+<span class="sd">        :parameter columnsToExclude: Columns to exclude from sas import. The</span>
+<span class="sd">                                     geometry column is excluded by default</span>
+<span class="sd">                                     as geometries cannot be imported in sas.</span>
+<span class="sd">        </span>
+<span class="sd">        :return: void</span>
+<span class="sd">        </span>
+<span class="sd">        :example:</span>
+<span class="sd">            </span>
+<span class="sd">            &gt;&gt;&gt; db.toSas(&#39;t03_pip_sample&#39;)</span>
+<span class="sd">        </span>
+<span class="sd">        Content of ./t01_zip.sas</span>
+<span class="sd">        </span>
+<span class="sd">        .. code-block:: sas</span>
+<span class="sd">        </span>
+<span class="sd">            filename myZip ZIP &#39;t03_pip_sample.zip&#39;;</span>
+<span class="sd">            </span>
+<span class="sd">            data t03_pip_sample(compress=YES);</span>
+<span class="sd">            length </span>
+<span class="sd">                    id_rec                                      8         </span>
+<span class="sd">                    rowid_point                                 8         </span>
+<span class="sd">                    rowid_polygon                               8         </span>
+<span class="sd">                    ;</span>
+<span class="sd">            infile myZip(t03_pip_sample.csv) </span>
+<span class="sd">                   dsd </span>
+<span class="sd">                   delimiter=&#39;|&#39; </span>
+<span class="sd">                   encoding=&#39;utf8&#39; </span>
+<span class="sd">                   firstobs=2 </span>
+<span class="sd">                   missover </span>
+<span class="sd">                   lrecl=10000;</span>
+<span class="sd">            input</span>
+<span class="sd">                    id_rec                                  </span>
+<span class="sd">                    rowid_point                             </span>
+<span class="sd">                    rowid_polygon                           </span>
+<span class="sd">                    ;</span>
+<span class="sd">            run;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">:toSas:start&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">archive_name</span><span class="p">:</span>
+            <span class="n">archive_name</span><span class="o">=</span><span class="n">table</span>
+                
+    
+        <span class="n">structure</span><span class="o">=</span><span class="p">{}</span> <span class="c1"># Un dictionnaire dont les keys sont les noms de colonnes et les valeurs, les longueurs maximales</span>
+        
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">getListOfColumns</span><span class="p">(</span><span class="n">table</span><span class="p">,</span><span class="n">withLengths</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">itertuples</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">cd_column_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;TEXT&#39;</span><span class="p">,</span><span class="s1">&#39;BLOB&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+                <span class="n">structure</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">Index</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;$&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">ms_max_length</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">cd_column_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;INTEGER&#39;</span><span class="p">,</span><span class="s1">&#39;DOUBLE&#39;</span><span class="p">,</span><span class="s1">&#39;REAL&#39;</span><span class="p">,</span><span class="s1">&#39;INT&#39;</span><span class="p">,</span><span class="s1">&#39;NUM&#39;</span><span class="p">):</span>
+                    <span class="n">structure</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">Index</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;8&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">structure</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">Index</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Unknown&#39;</span>
+        
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">structure</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columnsToExclude</span><span class="p">]:</span>
+            <span class="k">del</span><span class="p">(</span><span class="n">structure</span><span class="p">[</span><span class="n">d</span><span class="p">])</span>
+        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">outputDirectory</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">.sas&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;filename myZip ZIP &#39;</span><span class="si">{</span><span class="n">archive_name</span><span class="si">}</span><span class="s2">.zip&#39;;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;data </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s2">(compress=YES);</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;length </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">structure</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;        </span><span class="si">{</span><span class="n">variable</span><span class="si">:</span><span class="s1">40</span><span class="si">}</span><span class="s1">    </span><span class="si">{</span><span class="n">structure</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="si">:</span><span class="s1">10</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;        ;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;infile myZip(</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s2">.csv) dsd delimiter=&#39;|&#39; encoding=&#39;utf8&#39; firstobs=2 missover lrecl=10000;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;input</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> 
+            <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">structure</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;        </span><span class="si">{</span><span class="n">variable</span><span class="si">:</span><span class="s1">40</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;        ;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;run;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s1">:toSas:end&#39;</span><span class="p">)</span></div>
+    
+    <span class="k">def</span> <span class="nf">toSpatialite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                     <span class="n">db</span><span class="p">,</span>
+                     <span class="n">table</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">pass</span>    </div>
+        
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Youri Baeyens.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

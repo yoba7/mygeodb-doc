@@ -1,0 +1,10 @@
+geodatabase
+===========
+
+This modules currently has this unique class: `Geodatabase`.
+
+The `Geodatabase` class makes it possible to interact with `spatialite` databases. Example of projects using this package: `kad-buildings <https://github.com/yoba7/kad-buildings>`_ or `kad-clustering <https://github.com/yoba7/kad-clustering/blob/main/kad-clustering.ipynb>`_.
+
+   
+.. automodule:: geodatabase
+   :members:

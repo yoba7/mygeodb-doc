@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>geodatabase &mdash; mygeodb 23.06 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="graph" href="graph.html" />
+    <link rel="prev" title="Modules" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            mygeodb
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Readme</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">geodatabase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functions.html">functions</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">mygeodb</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">Modules</a></li>
+      <li class="breadcrumb-item active">geodatabase</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/geodatabase.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="geodatabase">
+<h1>geodatabase<a class="headerlink" href="#geodatabase" title="Permalink to this headline"></a></h1>
+<p>This modules currently has this unique class: <cite>Geodatabase</cite>.</p>
+<p>The <cite>Geodatabase</cite> class makes it possible to interact with <cite>spatialite</cite> databases. Example of projects using this package: <a class="reference external" href="https://github.com/yoba7/kad-buildings">kad-buildings</a> or <a class="reference external" href="https://github.com/yoba7/kad-clustering/blob/main/kad-clustering.ipynb">kad-clustering</a>.</p>
+<span class="target" id="module-geodatabase"></span><p>Created on Wed Dec 23 17:31:33 2020</p>
+<p>&#64;author: Youri.Baeyens</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">geodatabase.</span></span><span class="sig-name descname"><span class="pre">Geodatabase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">':memory:'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">srid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">31370</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recreate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase" title="Permalink to this definition"></a></dt>
+<dd><p>Geodatabase.</p>
+<p>Available methods:</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.attach">
+<span class="sig-name descname"><span class="pre">attach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.attach"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.attach" title="Permalink to this definition"></a></dt>
+<dd><p>Attach external db.</p>
+<dl class="field-list">
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attach</span><span class="p">(</span><span class="s1">&#39;c:\path o\mydb.sqlite&#39;</span><span class="p">,</span><span class="s1">&#39;mydb&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.checksForTable">
+<span class="sig-name descname"><span class="pre">checksForTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.checksForTable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.checksForTable" title="Permalink to this definition"></a></dt>
+<dd><p>Detects table <a class="reference external" href="https://www.gaia-gis.it/fossil/libspatialite/wiki?name=4.2.0+functions#5">without</a> rowid or with <a class="reference external" href="https://www.gaia-gis.it/fossil/libspatialite/wiki?name=Shadowed+ROWID+issues">shadowed</a> rowid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>Exception</strong> – Exception raised if either shadowed rowid or absence 
+of rowid raises are detected.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.close" title="Permalink to this definition"></a></dt>
+<dd><p>Closes the geodatabase.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.correctGeometry">
+<span class="sig-name descname"><span class="pre">correctGeometry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'geometry'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.correctGeometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.correctGeometry" title="Permalink to this definition"></a></dt>
+<dd><p>Correct geometries</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.createSpatialIndex">
+<span class="sig-name descname"><span class="pre">createSpatialIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'geometry'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.createSpatialIndex"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.createSpatialIndex" title="Permalink to this definition"></a></dt>
+<dd><p>Create a spatial index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>exception</strong> – Exception is thrown if the creation of 
+spatial index failed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.executeScript">
+<span class="sig-name descname"><span class="pre">executeScript</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">queryParameters</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.executeScript"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.executeScript" title="Permalink to this definition"></a></dt>
+<dd><p>Execute a sql script. The script can contain many SQLs separated
+by ;.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>query</strong> – Path to the sql query. Do not specify the .sql
+extension.</p>
+</dd>
+<dt class="field-even">QueryParameters</dt>
+<dd class="field-even"><p>list of “parameter=value” parameters that can be 
+used inside the query.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.findConnectedComponents">
+<span class="sig-name descname"><span class="pre">findConnectedComponents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">inputTable:</span> <span class="pre">str,</span> <span class="pre">edgesColumnNames:</span> <span class="pre">[&lt;class</span> <span class="pre">'str'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'str'&gt;],</span> <span class="pre">outputTable:</span> <span class="pre">str</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.core.frame.DataFrame</span></span></span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.findConnectedComponents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.findConnectedComponents" title="Permalink to this definition"></a></dt>
+<dd><p>Finds connected components of an undirected graph.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputTable</strong> (<em>str</em>) – DESCRIPTION</p></li>
+<li><p><strong>edgesColumnNames</strong> (<em>list</em>) – DESCRIPTION</p></li>
+<li><p><strong>outputTable</strong> (<em>str</em>) – DESCRIPTION</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>DESCRIPTION</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>TYPE</p>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">findConnectedComponents</span><span class="p">(</span><span class="s1">&#39;t01_edges&#39;</span><span class="p">,[</span><span class="s1">&#39;elt_a&#39;</span><span class="p">,</span><span class="s1">&#39;elt_b&#39;</span><span class="p">],</span><span class="s1">&#39;t02_cc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.getGeometriesMetadata">
+<span class="sig-name descname"><span class="pre">getGeometriesMetadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.core.frame.DataFrame</span></span></span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.getGeometriesMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.getGeometriesMetadata" title="Permalink to this definition"></a></dt>
+<dd><p>Get geometries metadata.</p>
+<dl class="field-list">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>DataFrame with available metadata on geometries.</p>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">getGeometriesMetadata</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>               <span class="n">f_geometry_column</span>  <span class="n">geometry_type</span>  <span class="n">coord_dimension</span>   <span class="n">srid</span>  <span class="n">spatial_index_enabled</span>
+<span class="n">f_table_name</span>                                                                                  
+<span class="n">t01_zip</span>                 <span class="n">geometry</span>           <span class="mi">3003</span>                <span class="mi">4</span>  <span class="mi">31370</span>                      <span class="mi">1</span>
+<span class="n">t04_zip_sample</span>          <span class="n">geometry</span>              <span class="mi">3</span>                <span class="mi">2</span>  <span class="mi">31370</span>                      <span class="mi">1</span>
+</pre></div>
+</div>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">getGeometriesMetadata</span><span class="p">()</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;t01_zip&#39;</span><span class="p">,:]</span>
+<span class="go">f_geometry_column        geometry</span>
+<span class="go">geometry_type                3003</span>
+<span class="go">coord_dimension                 4</span>
+<span class="go">srid                        31370</span>
+<span class="go">spatial_index_enabled           1</span>
+<span class="go">Name: t01_zip, dtype: object</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.getListOfColumns">
+<span class="sig-name descname"><span class="pre">getListOfColumns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">withLengths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">withDistincts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.core.frame.DataFrame</span></span></span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.getListOfColumns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.getListOfColumns" title="Permalink to this definition"></a></dt>
+<dd><p>Documents the structure and content of a table. The returned 
+pandas DataFrame has got this structure:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>cd_column_type: [‘INTEGER’,’DOUBLE’,’TEXT’,’POLYGON’,…]</p></li>
+<li><p>fl_notnull_constraint: 1=nulls are not allowed, 0=nulls allowed</p></li>
+<li><p>default_value</p></li>
+<li><p>fl_primary_key: 1=a primary key, 0=not a primary key</p></li>
+<li><p>ms_max_length: max length of column expressed in characters or bytes</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list">
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">getListOfColumns</span><span class="p">(</span><span class="s1">&#39;t01_zip&#39;</span><span class="p">,</span><span class="n">withLengths</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>               <span class="n">cd_column_type</span>   <span class="n">fl_primary_key</span>  <span class="n">ms_max_length</span>
+<span class="n">tx_column_name</span>                                                                                   
+<span class="n">pk_uid</span>                <span class="n">INTEGER</span>                <span class="mi">1</span>            <span class="mf">4.0</span>
+<span class="n">join_count</span>            <span class="n">INTEGER</span>                <span class="mi">0</span>            <span class="mf">5.0</span>
+<span class="n">nouveau_po</span>               <span class="n">TEXT</span>                <span class="mi">0</span>            <span class="mf">4.0</span>
+<span class="n">frequency</span>             <span class="n">INTEGER</span>                <span class="mi">0</span>            <span class="mf">2.0</span>
+<span class="n">cp_speciau</span>            <span class="n">INTEGER</span>                <span class="mi">0</span>            <span class="mf">1.0</span>
+<span class="n">shape_leng</span>             <span class="n">DOUBLE</span>                <span class="mi">0</span>           <span class="mf">13.0</span>
+<span class="n">shape_area</span>             <span class="n">DOUBLE</span>                <span class="mi">0</span>           <span class="mf">13.0</span>
+<span class="n">geometry</span>              <span class="n">POLYGON</span>                <span class="mi">0</span>       <span class="mf">142708.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.getListOfTables">
+<span class="sig-name descname"><span class="pre">getListOfTables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.core.frame.DataFrame</span></span></span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.getListOfTables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.getListOfTables" title="Permalink to this definition"></a></dt>
+<dd><p>Get list of tables in geodatabase (including indexes and count of rows).</p>
+<dl class="field-list">
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">getListOfTables</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>               <span class="n">ms_countOf_geometries</span>   <span class="n">ms_countOf_spatial_indexes</span>   <span class="n">ms_countOf_rows</span>
+<span class="n">f_table_name</span>
+<span class="n">T01_zip</span>                             <span class="mi">1</span>                           <span class="mi">1</span>           <span class="mf">1268.0</span>
+<span class="n">T02_PIP</span>                             <span class="mi">0</span>                           <span class="mi">0</span>         <span class="mf">225263.0</span>
+<span class="n">t03_sample</span>                          <span class="mi">0</span>                           <span class="mi">0</span>         <span class="mf">225262.0</span>
+<span class="n">t04_sample</span>                          <span class="mi">0</span>                           <span class="mi">0</span>              <span class="mf">2.0</span>
+<span class="n">t04_zip</span>                             <span class="mi">1</span>                           <span class="mi">1</span>             <span class="mf">10.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.getTableCountOfRows">
+<span class="sig-name descname"><span class="pre">getTableCountOfRows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.getTableCountOfRows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.getTableCountOfRows" title="Permalink to this definition"></a></dt>
+<dd><p>Counts the number of rows in table.</p>
+<dl class="field-list">
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">getTableCountOfRows</span><span class="p">(</span><span class="s1">&#39;T01_ZIP&#39;</span><span class="p">)</span>
+<span class="go">1268</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.inspectGeometry">
+<span class="sig-name descname"><span class="pre">inspectGeometry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'geometry'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.inspectGeometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.inspectGeometry" title="Permalink to this definition"></a></dt>
+<dd><p>Inspects the nature of a table geometry.</p>
+<dl class="field-list">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>List of <em>(geomType, srid, coordDimension, ms_countof_rows)</em> 
+t-uples.</p>
+</dd>
+<dt class="field-even">Example</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">inspectGeometry</span><span class="p">(</span><span class="s1">&#39;T01_ZIP&#39;</span><span class="p">)</span>
+<span class="go">[(&#39;POLYGON ZM&#39;, 31370, &#39;XYZM&#39;, 1268)]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>a Geometry can contain various types of geometries 
+(eg: both Polygons and Multipolygons). As a consequence
+the returned list can contain multiple elements.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.loadCsv">
+<span class="sig-name descname"><span class="pre">loadCsv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csvFile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">if_exists</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'fail'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'replace'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'append'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'replace'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">readParameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.loadCsv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.loadCsv" title="Permalink to this definition"></a></dt>
+<dd><p>Loads csv file and into a table.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>csvFile</strong> – Path to csv file. File extension should 
+be mentionned.</p></li>
+<li><p><strong>table</strong> – Table name.</p></li>
+<li><p><strong>if_exists</strong> – What to do if table already exists.</p></li>
+<li><p><strong>readParameters</strong> – Parameters for the pandas.read_csv 
+function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>void</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dtype</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>       <span class="s1">&#39;ADR_ID&#39;</span><span class="p">:</span><span class="s1">&#39;str&#39;</span><span class="p">,</span> 
+<span class="gp">&gt;&gt;&gt; </span>       <span class="s1">&#39;ADR_CREAT&#39;</span><span class="p">:</span><span class="s1">&#39;str&#39;</span><span class="p">,</span> 
+<span class="gp">&gt;&gt;&gt; </span>       <span class="s1">&#39;ADR_MODIF&#39;</span><span class="p">:</span><span class="s1">&#39;str&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>       <span class="s1">&#39;X&#39;</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> 
+<span class="gp">&gt;&gt;&gt; </span>       <span class="s1">&#39;Y&#39;</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+<span class="gp">&gt;&gt;&gt; </span>      <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;ADR_CREAT&#39;</span><span class="p">,</span> <span class="s1">&#39;ADR_MODIF&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">loadCsv</span><span class="p">(</span><span class="s1">&#39;myFile.csv&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>           <span class="s1">&#39;myTable&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>           <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>           <span class="n">parse_dates</span><span class="o">=</span><span class="n">parse_dates</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>           <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;|&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.loadEmbeddedCsv">
+<span class="sig-name descname"><span class="pre">loadEmbeddedCsv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">if_exists</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'fail'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'replace'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'append'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'replace'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">readParameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.loadEmbeddedCsv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.loadEmbeddedCsv" title="Permalink to this definition"></a></dt>
+<dd><p>Loads an embedded csv file and into a table.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> – Embedded csv file.</p></li>
+<li><p><strong>table</strong> – Table name.</p></li>
+<li><p><strong>if_exists</strong> – What to do if table already exists.</p></li>
+<li><p><strong>readParameters</strong> – Parameters for the pandas.read_csv 
+function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>void</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">file</span><span class="o">=</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">cd_sex|tx_sex</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">M|Male</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">F|Female</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">loadEmbeddedCsv</span><span class="p">(</span><span class="n">file</span><span class="p">,</span><span class="s1">&#39;t_sex&#39;</span><span class="p">,</span><span class="n">sep</span><span class="o">=</span><span class="s1">&#39;|&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.loadShp">
+<span class="sig-name descname"><span class="pre">loadShp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shapeFile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'CP1252'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">srid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.loadShp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.loadShp" title="Permalink to this definition"></a></dt>
+<dd><p>Loads a shapefile and spatially indexes the resulting table.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shapeFile</strong> – Path to shapefile. File extension should be 
+.shp and cannot be mentionned in shapeFile.</p></li>
+<li><p><strong>table</strong> – Name of the table to be created. This table 
+will be automatically spatially indexed.</p></li>
+<li><p><strong>encoding</strong> – The character encoding adopted by the DBF 
+member, as e.g. UTF-8 or CP1252.</p></li>
+<li><p><strong>srid</strong> – EPSG SRID value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>void</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">geodatabase</span> <span class="k">as</span> <span class="nn">gdb</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">=</span><span class="n">gdb</span><span class="o">.</span><span class="n">geodatabase</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">loadShp</span><span class="p">(</span><span class="s1">&#39;C:/.../postaldistricts&#39;</span><span class="p">,</span><span class="s1">&#39;T01_zip&#39;</span><span class="p">)</span> 
+<span class="go">Loading shapefile at &#39;C:/.../postaldistricts&#39; into SQLite table &#39;T01_zip&#39;</span>
+<span class="go">Inserted 1268 rows into &#39;T01_zip&#39; from SHAPEFILE</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.pointInPolygon">
+<span class="sig-name descname"><span class="pre">pointInPolygon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polygons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputTable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.pointInPolygon"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.pointInPolygon" title="Permalink to this definition"></a></dt>
+<dd><p>Assigns point to polygons.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – Name of the table containing points.</p></li>
+<li><p><strong>polygons</strong> – Name of the table containing polygons.</p></li>
+<li><p><strong>outputTable</strong> – Name of the output table.</p></li>
+<li><p><strong>queryParameters</strong> – List of “parameter=value”. Those 
+parameters can be used inside the query.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>void.</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Do not VACUUM your database ! If you do, you risk to break
+your link table.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.recoverGeometry">
+<span class="sig-name descname"><span class="pre">recoverGeometry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'geometry'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.recoverGeometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.recoverGeometry" title="Permalink to this definition"></a></dt>
+<dd><p>Recovers geometry, ie, registers the geometry in spatialite’s metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>table</strong> – Name of the table containing the geometry.</p></li>
+<li><p><strong>geometry</strong> – Name of the geometry column.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>exception</strong> – Exception is raised if geometry cannot be recovered.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>void</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.recoverSpatialIndex">
+<span class="sig-name descname"><span class="pre">recoverSpatialIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'geometry'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.recoverSpatialIndex"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.recoverSpatialIndex" title="Permalink to this definition"></a></dt>
+<dd><p>Recover Spatial Index.</p>
+<p>A delete operation followed by a VACCUM operation could leave an index 
+in an inconsistent state.</p>
+<p>This method checks for the consistency of the spatial index. If the 
+spatial index is inconsistent then try to recover the index (ie, rebuild). 
+If index recovery failed then an exception is thrown.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>Exception</strong> – Raises an Exception if geometry is inconsistent.</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Inconsistent indexes can have a dramatic impact. Read
+<a class="reference external" href="http://www.gaia-gis.it/gaia-sins/SpatialIndex-Update.pdf">this note on SpatialIndexes</a> 
+carefully! Please, run this method if you have
+a doubt on the integrity of your spatial index.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.reproject">
+<span class="sig-name descname"><span class="pre">reproject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputTable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">srid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputTable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">if_exists</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'fail'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'replace'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'fail'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.reproject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.reproject" title="Permalink to this definition"></a></dt>
+<dd><p>Reproject.</p>
+<p>This method reprojects a geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputTable</strong> – Name of the table containing the geometry to reproject.</p></li>
+<li><p><strong>srid</strong> – Reproject into the Reference System identified by srid.</p></li>
+<li><p><strong>outputTable</strong> – Name of the output table containing the reprojected geometry.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>void</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.toCsv">
+<span class="sig-name descname"><span class="pre">toCsv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">archive_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'w'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'a'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'w'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputDirectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columnsToExclude</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">['geometry']</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.toCsv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.toCsv" title="Permalink to this definition"></a></dt>
+<dd><p>Exports a table to a csv file.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>table</strong> – Table name.</p></li>
+<li><p><strong>outputDirectory</strong> – Output directory.</p></li>
+<li><p><strong>columnsToExclude</strong> – Columns to exclude from export.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>void</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">toCsv</span><span class="p">(</span><span class="s1">&#39;T01_table&#39;</span><span class="p">,</span><span class="s1">&#39;../output&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="geodatabase.Geodatabase.toSas">
+<span class="sig-name descname"><span class="pre">toSas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">archive_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputDirectory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columnsToExclude</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">['geometry']</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/geodatabase.html#Geodatabase.toSas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#geodatabase.Geodatabase.toSas" title="Permalink to this definition"></a></dt>
+<dd><p>Create as sas program to import the csv export of a table.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>table</strong> – Table name.</p></li>
+<li><p><strong>outputDirectory</strong> – Output directory. The default is ‘.’.</p></li>
+<li><p><strong>columnsToExclude</strong> – Columns to exclude from sas import. The
+geometry column is excluded by default
+as geometries cannot be imported in sas.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>void</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">db</span><span class="o">.</span><span class="n">toSas</span><span class="p">(</span><span class="s1">&#39;t03_pip_sample&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>Content of ./t01_zip.sas</p>
+<div class="highlight-sas notranslate"><div class="highlight"><pre><span></span><span class="k">filename</span> myZip ZIP <span class="s">&#39;t03_pip_sample.zip&#39;</span><span class="kr">;</span>
+
+<span class="kr">data </span>t03_pip_sample(compress=YES);
+<span class="k">length</span> 
+        id_rec                                      <span class="m">8</span>         
+        rowid_point                                 <span class="m">8</span>         
+        rowid_polygon                               <span class="m">8</span>         
+        ;
+<span class="k">infile</span> myZip(t03_pip_sample<span class="m">.</span>csv) 
+       dsd 
+       <span class="k">delimiter</span>=<span class="s">&#39;|&#39;</span> 
+       encoding=<span class="s">&#39;utf8&#39;</span> 
+       firstobs=<span class="m">2</span> 
+       missover 
+       lrecl=<span class="m">10000</span>;
+<span class="k">input</span>
+        id_rec                                  
+        rowid_point                             
+        rowid_polygon                           
+        <span class="kr">;</span>
+<span class="kr">run;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="Modules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="graph.html" class="btn btn-neutral float-right" title="graph" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Youri Baeyens.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

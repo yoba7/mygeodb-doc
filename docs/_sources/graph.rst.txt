@@ -1,0 +1,10 @@
+graph
+=====
+
+Classes to work with a graph. Currently, there is only one class: ``connectedComponentsLabeler``. This class makes it possible to identifiy the connected components of an undirected graph. This little `beamer presentation <https://github.com/yoba7/SAS-macros/blob/0e7dc8b9f819a8595fced40f5bf1846de796148a/connectedComponentsLabeling.pdf>`_ will enable you to understand how the algorithm work. This algorithm is, for example, used in the `kad-clustering <https://github.com/yoba7/kad-clustering/blob/main/kad-clustering.ipynb>`_ project to cluster parcels. 
+
+.. automodule:: graph
+  :members: connectedComponentsLabeler
+
+
+

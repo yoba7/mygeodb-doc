@@ -1,0 +1,7 @@
+functions
+=========
+
+Helper functions for mygeodb projects.
+
+.. automodule:: functions
+   :members:
