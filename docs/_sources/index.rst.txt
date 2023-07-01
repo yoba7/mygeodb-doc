@@ -27,7 +27,6 @@ In order to use ``mygeodb``, you'll need to install the ``libspatialite`` in you
    :maxdepth: 3
    :caption: Contents:
 
-   readme
    modules
 
 
